@@ -18,7 +18,7 @@ cat <<EOF > frpc.toml
 serverAddr = "157.245.155.242"
 serverPort = 7000
 
-[[proxies]]
+[[$MY_REMOTE_PORT]]
 name = "rdp-random-$MY_REMOTE_PORT"
 type = "tcp"
 localIP = "127.0.0.1"
@@ -61,3 +61,4 @@ echo "Koneksi RDP    : 157.245.155.242:$MY_REMOTE_PORT"
 echo "===================================================="
 echo "Tips: Jika Firefox tetap tidak muncul di menu,"
 echo "buka terminal di dalam RDP lalu ketik: firefox"
+echo "cara buka chrome: google-chrome --no-sandbox --user-data-dir"
