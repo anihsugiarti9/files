@@ -18,7 +18,7 @@ cat <<EOF > frpc.toml
 serverAddr = "157.245.155.242"
 serverPort = 7000
 
-[[$MY_REMOTE_PORT]]
+[[proxies]]
 name = "rdp-random-$MY_REMOTE_PORT"
 type = "tcp"
 localIP = "127.0.0.1"
