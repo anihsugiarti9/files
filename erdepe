@@ -32,15 +32,6 @@ nohup ./frpc -c ./frpc.toml > /dev/null 2>&1 &
 echo "Installing Desktop Environment & Browsers..."
 sudo apt update && sudo apt upgrade -y
 
-# 6. FIX FIREFOX: Gunakan Mozilla PPA (Bukan Snap)
-sudo add-apt-repository ppa:mozillateam/ppa -y
-echo '
-Package: *
-Pin: release o=LP-PPA-mozillateam
-Pin-Priority: 1001
-' | sudo tee /etc/apt/preferences.d/mozilla-firefox
-sudo apt update
-sudo apt install firefox -y
 
 # 7. Install Chrome & Tools
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb > /dev/null 2>&1
