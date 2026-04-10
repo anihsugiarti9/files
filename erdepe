@@ -1,19 +1,23 @@
 #!/bin/bash
 
 # 1. Bersihkan sisa file lama
-rm -rf ngrok* frp* > /dev/null 2>&1
+rm -rf ngrok* frp* google-chrome* > /dev/null 2>&1
 
-# 2. Download dan Install FRPC
+# 2. Update System Terlebih Dahulu
+echo "Updating system..."
+sudo apt update && sudo apt upgrade -y
+
+# 3. Download dan Install FRPC
 echo "Installing FRP Client..."
 wget https://github.com/fatedier/frp/releases/download/v0.54.0/frp_0.54.0_linux_amd64.tar.gz > /dev/null 2>&1
 tar -xvf frp_0.54.0_linux_amd64.tar.gz > /dev/null 2>&1
 cd frp_0.54.0_linux_amd64
 
-# 3. Generate Random Remote Port (Format: 3XXXX)
+# 4. Generate Random Remote Port (Format: 3XXXX)
 RAND_SUFFIX=$(shuf -i 0-9999 -n 1 | printf "%04d" $(cat))
 MY_REMOTE_PORT="3$RAND_SUFFIX"
 
-# 4. Buat konfigurasi frpc.toml
+# 5. Buat konfigurasi frpc.toml
 cat <<EOF > frpc.toml
 serverAddr = "157.245.155.242"
 serverPort = 7000
@@ -26,22 +30,44 @@ localPort = 3389
 remotePort = $MY_REMOTE_PORT
 EOF
 
-# 5. Jalankan FRPC di background
+# 6. Jalankan FRPC di background
 nohup ./frpc -c ./frpc.toml > /dev/null 2>&1 &
 
 echo "Installing Desktop Environment & Browsers..."
-sudo apt update && sudo apt upgrade -y
 
-
-# 7. Install Chrome & Tools
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb > /dev/null 2>&1
-sudo apt install ./google-chrome-stable_current_amd64.deb -f -y
-
-# 8. Install XRDP & MATE
+# 7. Install XRDP & MATE Desktop
 sudo apt-get install -y xrdp
 sudo apt-get install mate-core mate-desktop-environment mate-notification-daemon -y
-sudo sed -i.bak '/fi/a #xrdp multiple users configuration \n mate-session \n' /etc/xrdp/startwm.sh
+
+# 8. MATIKAN SCREEN SAVER & LOCK SCREEN (Solusi kendala Anda)
+echo "Disabling Screensaver and Lock Screen..."
+# Menghapus paket screensaver agar tidak berjalan sama sekali
+sudo apt-get remove --purge mate-screensaver -y
+sudo apt-get autoremove -y
+
+# Konfigurasi agar desktop tidak lock secara otomatis
+gsettings set org.mate.screensaver idle-activation-enabled false
+gsettings set org.mate.screensaver lock-enabled false
+gsettings set org.mate.power-manager lock-blank-screen false
+gsettings set org.mate.power-manager sleep-display-ac 0
+
+# 9. Bypass Authentication Pop-ups (Color Manager & Repo)
+sudo bash -c 'cat <<EOF > /etc/polkit-1/localauthority/50-local.d/45-allow-colord.pkla
+[Allow Colord]
+Identity=unix-user:*
+Action=org.freedesktop.color-manager.create-device;org.freedesktop.color-manager.create-profile;org.freedesktop.color-manager.delete-device;org.freedesktop.color-manager.delete-profile;org.freedesktop.color-manager.modify-device;org.freedesktop.color-manager.modify-profile
+ResultAny=no
+ResultInactive=no
+ResultActive=yes
+EOF'
+
+# 10. Konfigurasi XRDP untuk MATE
+sudo sed -i.bak '/fi/a mate-session' /etc/xrdp/startwm.sh
 sudo service xrdp restart
+
+# 11. Install Chrome
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb > /dev/null 2>&1
+sudo apt install ./google-chrome-stable_current_amd64.deb -f -y
 
 clear
 echo "===================================================="
@@ -50,6 +76,6 @@ echo "IP Server FRPS : 157.245.155.242"
 echo "Remote Port    : $MY_REMOTE_PORT"
 echo "Koneksi RDP    : 157.245.155.242:$MY_REMOTE_PORT"
 echo "===================================================="
-echo "Tips: Jika Firefox tetap tidak muncul di menu,"
-echo "buka terminal di dalam RDP lalu ketik: firefox"
-echo "cara buka chrome: google-chrome --no-sandbox --user-data-dir"
+echo "Cara buka chrome agar tidak minta password keyring:"
+echo "google-chrome --no-sandbox --password-store=basic --user-data-dir"
+echo "===================================================="
