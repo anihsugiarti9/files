@@ -3,9 +3,16 @@
 # 1. Bersihkan sisa file lama
 rm -rf ngrok* frp* google-chrome* > /dev/null 2>&1
 
-# 2. Update System Terlebih Dahulu
+# 2. Update System & Set Non-Interactive Mode
 echo "Updating system..."
-sudo apt update && sudo apt upgrade -y
+# Tambahkan variabel ini agar tidak muncul prompt keyboard/bahasa
+export DEBIAN_FRONTEND=noninteractive
+
+# Memberikan jawaban default untuk keyboard agar tidak bertanya (31 & 1)
+sudo debconf-set-selections <<< 'keyboard-configuration keyboard-configuration/layout select English (US)'
+sudo debconf-set-selections <<< 'keyboard-configuration keyboard-configuration/variant select English (US)'
+
+sudo apt update && sudo apt upgrade -y -o Dpkg::Options::="--force-confold"
 
 # 3. Download dan Install FRPC
 echo "Installing FRP Client..."
@@ -35,13 +42,12 @@ nohup ./frpc -c ./frpc.toml > /dev/null 2>&1 &
 
 echo "Installing Desktop Environment & Browsers..."
 
-# 7. Install XRDP & MATE Desktop
+# 7. Install XRDP & MATE Desktop (Gunakan flag -y dan noninteractive)
 sudo apt-get install -y xrdp
-sudo apt-get install mate-core mate-desktop-environment mate-notification-daemon -y
+sudo DEBIAN_FRONTEND=noninteractive apt-get install mate-core mate-desktop-environment mate-notification-daemon -y -o Dpkg::Options::="--force-confold"
 
-# 8. MATIKAN SCREEN SAVER & LOCK SCREEN (Solusi kendala Anda)
+# 8. MATIKAN SCREEN SAVER & LOCK SCREEN
 echo "Disabling Screensaver and Lock Screen..."
-# Menghapus paket screensaver agar tidak berjalan sama sekali
 sudo apt-get remove --purge mate-screensaver -y
 sudo apt-get autoremove -y
 
@@ -51,7 +57,7 @@ gsettings set org.mate.screensaver lock-enabled false
 gsettings set org.mate.power-manager lock-blank-screen false
 gsettings set org.mate.power-manager sleep-display-ac 0
 
-# 9. Bypass Authentication Pop-ups (Color Manager & Repo)
+# 9. Bypass Authentication Pop-ups
 sudo bash -c 'cat <<EOF > /etc/polkit-1/localauthority/50-local.d/45-allow-colord.pkla
 [Allow Colord]
 Identity=unix-user:*
@@ -67,7 +73,7 @@ sudo service xrdp restart
 
 # 11. Install Chrome
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb > /dev/null 2>&1
-sudo apt install ./google-chrome-stable_current_amd64.deb -f -y
+sudo DEBIAN_FRONTEND=noninteractive apt install ./google-chrome-stable_current_amd64.deb -f -y
 
 clear
 echo "===================================================="
